@@ -1,0 +1,226 @@
+<p-toast />
+<p-confirmdialog [style]="{ width: '450px' }" />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Volver a Eventos" icon="pi pi-arrow-left" text (onClick)="volverAEventos()" class="mr-4" />
+        <p-button label="Agregar Staff" icon="pi pi-plus" severity="secondary" (onClick)="openNew()" />
+    </ng-template>
+</p-toolbar>
+
+@if (loading && staffList().length === 0) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando staff...</span>
+    </div>
+</div>
+} @else {
+<p-table
+    #dt
+    [value]="staffList()"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['usuario.nombre', 'usuario.correo']"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} staff"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Staff del Evento</h5>
+            <div class="flex items-center gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="loadStaff()" pTooltip="Actualizar" />
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="usuario.nombre" style="min-width: 10rem">Nombre <p-sortIcon field="usuario.nombre" /></th>
+            <th pSortableColumn="usuario.correo" style="min-width: 12rem">Correo <p-sortIcon field="usuario.correo" /></th>
+            <th pSortableColumn="usuario.celular" style="min-width: 8rem">Celular <p-sortIcon field="usuario.celular" /></th>
+            <th pSortableColumn="activo" style="min-width: 6rem">Activo <p-sortIcon field="activo" /></th>
+            <th style="min-width: 8rem"></th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-staff>
+        <tr>
+            <td>{{ staff.usuario.nombre }} {{ staff.usuario.apellidoPaterno || '' }}</td>
+            <td>{{ staff.usuario.correo }}</td>
+            <td>{{ staff.usuario.celular || '-' }}</td>
+            <td>
+                <i class="pi" [ngClass]="staff.activo ? 'pi-check-circle text-green-500' : 'pi-times-circle text-red-400'"></i>
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" (click)="editStaff(staff)" pTooltip="Editar" />
+                    <p-button icon="pi pi-map" severity="info" [rounded]="true" [outlined]="true" (click)="openSectores(staff)" pTooltip="Sectores" />
+                    <p-button icon="pi pi-ban" severity="danger" [rounded]="true" [outlined]="true" (click)="desactivarStaff(staff)" pTooltip="Desactivar" />
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="5" class="text-center p-4">No se encontró staff asignado.</td>
+        </tr>
+    </ng-template>
+</p-table>
+}
+
+<!-- Dialog agregar/editar staff -->
+<p-dialog [(visible)]="staffDialog" [style]="{ width: '500px' }" [header]="editingStaffId ? 'Editar Staff' : 'Agregar Staff'" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-6">
+            @if (!editingStaffId) {
+                <div>
+                    <label for="staff-correo" class="block font-bold mb-3">Correo del usuario *</label>
+                    <input type="email" pInputText id="staff-correo" [(ngModel)]="form.correo" required autofocus fluid />
+                    @if (submitted && !form.correo) {
+                        <small class="text-red-500">El correo es requerido.</small>
+                    }
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <p-toggleswitch [(ngModel)]="modoNuevo" />
+                    <span>{{ modoNuevo ? 'Crear usuario nuevo con estos datos' : 'Asignar usuario existente por correo' }}</span>
+                </div>
+            } @else {
+                <div>
+                    <label class="block font-bold mb-3">Correo</label>
+                    <input type="email" pInputText [value]="form.correo" disabled fluid />
+                </div>
+            }
+
+            @if (modoNuevo || editingStaffId) {
+                <div class="flex flex-col gap-4">
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-6">
+                            <label for="staff-nombre" class="block font-bold mb-3">Nombre *</label>
+                            <input type="text" pInputText id="staff-nombre" [(ngModel)]="form.nombre" fluid />
+                            @if (submitted && editingStaffId && !form.nombre?.trim()) {
+                                <small class="text-red-500">El nombre es requerido.</small>
+                            }
+                        </div>
+                        <div class="col-span-6">
+                            <label for="staff-apellido" class="block font-bold mb-3">Apellido Paterno</label>
+                            <input type="text" pInputText id="staff-apellido" [(ngModel)]="form.apellidoPaterno" fluid />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-6">
+                            <label for="staff-apellido-m" class="block font-bold mb-3">Apellido Materno</label>
+                            <input type="text" pInputText id="staff-apellido-m" [(ngModel)]="form.apellidoMaterno" fluid />
+                        </div>
+                        <div class="col-span-6">
+                            <label for="staff-celular" class="block font-bold mb-3">Celular</label>
+                            <input type="text" pInputText id="staff-celular" [(ngModel)]="form.celular" fluid />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="staff-clave" class="block font-bold mb-3">{{ editingStaffId ? 'Nueva Contraseña' : 'Contraseña *' }}</label>
+                        <p-password id="staff-clave" [(ngModel)]="form.clave" [toggleMask]="true" [feedback]="false" [fluid]="true" />
+                        @if (submitted && !editingStaffId && modoNuevo && !form.clave?.trim()) {
+                            <small class="text-red-500">La contraseña es obligatoria.</small>
+                        } @else {
+                            <small class="text-surface-500">{{ editingStaffId ? 'Dejar vacío para no cambiarla.' : 'El staff podrá ingresar con esta contraseña inmediatamente.' }}</small>
+                        }
+                    </div>
+                    @if (editingStaffId) {
+                        <div class="flex items-center gap-3">
+                            <p-toggleswitch [(ngModel)]="form.activo" />
+                            <span>{{ form.activo ? 'Activo' : 'Inactivo' }}</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button [label]="editingStaffId ? 'Guardar' : 'Agregar'" icon="pi pi-check" (click)="saveStaff()" />
+    </ng-template>
+</p-dialog>
+
+<!-- Dialog gestionar sectores del staff -->
+<p-dialog [(visible)]="sectoresDialog" [style]="{ width: '600px' }" header="Gestionar Sectores" [modal]="true" (onHide)="hideSectoresDialog()">
+    <ng-template #content>
+        @if (selectedStaff) {
+            <div class="flex flex-col gap-4">
+                <div class="flex gap-4 text-sm text-surface-600">
+                    <span><strong>Staff:</strong> {{ selectedStaff.usuario.nombre }} {{ selectedStaff.usuario.apellidoPaterno || '' }}</span>
+                    <span><strong>Correo:</strong> {{ selectedStaff.usuario.correo }}</span>
+                </div>
+
+                @if (staffSectores().length === 0 && !loadingSectores) {
+                    <div class="flex items-center gap-2 p-4 border-1 border-yellow-300 bg-yellow-50 rounded-lg text-yellow-800">
+                        <i class="pi pi-exclamation-triangle"></i>
+                        <span>Este staff aún no tiene sector asignado.</span>
+                    </div>
+                }
+
+                <!-- Agregar sector -->
+                <div class="flex items-end gap-3">
+                    <div class="flex-1">
+                        <label class="block font-bold mb-2">Agregar sector</label>
+                        <p-select
+                            [(ngModel)]="sectorToAdd"
+                            [options]="sectoresDisponibles"
+                            optionLabel="nombreSector"
+                            placeholder="Seleccionar sector..."
+                            appendTo="body"
+                            [fluid]="true"
+                        />
+                    </div>
+                    <p-button icon="pi pi-plus" label="Agregar" [disabled]="!sectorToAdd" (onClick)="asignarSector()" />
+                </div>
+
+                <!-- Tabla de sectores asignados -->
+                <p-table [value]="staffSectores()" [loading]="loadingSectores" dataKey="id" [tableStyle]="{ 'min-width': '100%' }">
+                    <ng-template #header>
+                        <tr>
+                            <th style="min-width: 10rem">Sector</th>
+                            <th style="min-width: 6rem">Activo</th>
+                            <th style="min-width: 6rem">Acciones</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template #body let-ss>
+                        <tr>
+                            <td>{{ ss.sector.nombreSector }}</td>
+                            <td>
+                                <p-radiobutton
+                                    [value]="ss.id"
+                                    [ngModel]="staffSectores().find(s => s.activo)?.id"
+                                    (onClick)="cambiarActivo(ss)"
+                                    [inputId]="'sector-activo-' + ss.id"
+                                />
+                            </td>
+                            <td>
+                                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" [text]="true" (click)="quitarSector(ss)" pTooltip="Quitar" />
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template #emptymessage>
+                        <tr>
+                            <td colspan="3" class="text-center p-4 text-surface-500">Sin sectores asignados.</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        }
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cerrar" icon="pi pi-times" text (click)="hideSectoresDialog()" />
+    </ng-template>
+</p-dialog>

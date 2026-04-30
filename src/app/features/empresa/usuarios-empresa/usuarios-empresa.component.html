@@ -1,0 +1,138 @@
+<p-toast />
+<p-confirmdialog [style]="{ width: '450px' }" />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nuevo Usuario" icon="pi pi-plus" severity="secondary" (onClick)="openNew()" />
+    </ng-template>
+</p-toolbar>
+
+@if (loading && usuarios().length === 0) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando usuarios...</span>
+    </div>
+</div>
+} @else {
+<p-table
+    #dt
+    [value]="usuarios()"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['usuario.nombre', 'usuario.correo', 'rolEmpresaCodigo']"
+    [tableStyle]="{ 'min-width': '60rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Usuarios de la Empresa</h5>
+            <div class="flex items-center gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="loadUsuarios()" pTooltip="Actualizar" />
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="usuario.nombre" style="min-width: 10rem">Nombre <p-sortIcon field="usuario.nombre" /></th>
+            <th pSortableColumn="usuario.correo" style="min-width: 12rem">Correo <p-sortIcon field="usuario.correo" /></th>
+            <th pSortableColumn="usuario.celular" style="min-width: 8rem">Celular <p-sortIcon field="usuario.celular" /></th>
+            <th pSortableColumn="rolEmpresaCodigo" style="min-width: 8rem">Rol <p-sortIcon field="rolEmpresaCodigo" /></th>
+            <th pSortableColumn="activo" style="min-width: 6rem">Activo <p-sortIcon field="activo" /></th>
+            <th style="min-width: 10rem"></th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-ue>
+        <tr>
+            <td>{{ ue.usuario.nombre }} {{ ue.usuario.apellidoPaterno || '' }}</td>
+            <td>{{ ue.usuario.correo }}</td>
+            <td>{{ ue.usuario.celular || '-' }}</td>
+            <td><p-tag [value]="ue.rolEmpresaCodigo" [severity]="getRolSeverity(ue.rolEmpresaCodigo)" /></td>
+            <td>
+                <i class="pi" [ngClass]="ue.activo ? 'pi-check-circle text-green-500' : 'pi-times-circle text-red-400'"></i>
+            </td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editUsuario(ue)" />
+                <p-button icon="pi pi-ban" severity="danger" [rounded]="true" [outlined]="true" (click)="desactivarUsuario(ue)" pTooltip="Desactivar" />
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="6" class="text-center p-4">No se encontraron usuarios.</td>
+        </tr>
+    </ng-template>
+</p-table>
+}
+
+<!-- Dialog crear/editar usuario -->
+<p-dialog [(visible)]="usuarioDialog" [style]="{ width: '500px' }" [header]="isEdit ? 'Editar Usuario' : 'Agregar Usuario'" [modal]="true">
+    <ng-template #content>
+        <!-- Crear -->
+        @if (!isEdit) {
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="correo" class="block font-bold mb-3">Correo electrónico *</label>
+                    <input type="email" pInputText id="correo" [(ngModel)]="crearForm.correo" required autofocus fluid />
+                    @if (submitted && !crearForm.correo) {
+                        <small class="text-red-500">El correo es requerido.</small>
+                    }
+                </div>
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-6">
+                        <label for="nombre" class="block font-bold mb-3">Nombre</label>
+                        <input type="text" pInputText id="nombre" [(ngModel)]="crearForm.nombre" fluid />
+                    </div>
+                    <div class="col-span-6">
+                        <label for="apellido" class="block font-bold mb-3">Apellido Paterno</label>
+                        <input type="text" pInputText id="apellido" [(ngModel)]="crearForm.apellidoPaterno" fluid />
+                    </div>
+                </div>
+                <div>
+                    <label for="rol" class="block font-bold mb-3">Rol en la Empresa</label>
+                    <p-select [(ngModel)]="crearForm.rolEmpresaCodigo" inputId="rol" [options]="roles" optionLabel="label" optionValue="value" placeholder="Seleccione rol" appendTo="body" fluid />
+                </div>
+            </div>
+        }
+
+        <!-- Editar -->
+        @if (isEdit) {
+            <div class="flex flex-col gap-6">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-6">
+                        <label for="edit-nombre" class="block font-bold mb-3">Nombre</label>
+                        <input type="text" pInputText id="edit-nombre" [(ngModel)]="editarForm.nombre" fluid />
+                    </div>
+                    <div class="col-span-6">
+                        <label for="edit-apellido" class="block font-bold mb-3">Apellido Paterno</label>
+                        <input type="text" pInputText id="edit-apellido" [(ngModel)]="editarForm.apellidoPaterno" fluid />
+                    </div>
+                </div>
+                <div>
+                    <label for="edit-celular" class="block font-bold mb-3">Celular</label>
+                    <input type="text" pInputText id="edit-celular" [(ngModel)]="editarForm.celular" fluid />
+                </div>
+                <div>
+                    <label for="edit-rol" class="block font-bold mb-3">Rol</label>
+                    <p-select [(ngModel)]="editarForm.nuevoRol" inputId="edit-rol" [options]="roles" optionLabel="label" optionValue="value" placeholder="Seleccione rol" appendTo="body" fluid />
+                </div>
+            </div>
+        }
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveUsuario()" />
+    </ng-template>
+</p-dialog>

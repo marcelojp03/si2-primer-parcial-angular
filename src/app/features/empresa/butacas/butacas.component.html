@@ -1,0 +1,138 @@
+<p-toast />
+<p-confirmdialog [style]="{ width: '450px' }" />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Volver a Sectores" icon="pi pi-arrow-left" text (onClick)="volverASectores()" class="mr-4" />
+        <p-button label="Nueva Butaca" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button label="Carga por Lote" icon="pi pi-th-large" severity="info" outlined (onClick)="openLoteDialog()" />
+    </ng-template>
+</p-toolbar>
+
+@if (loading && butacas().length === 0) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando butacas...</span>
+    </div>
+</div>
+} @else {
+<p-table
+    #dt
+    [value]="butacas()"
+    [rows]="20"
+    [paginator]="true"
+    [globalFilterFields]="['codigoButaca', 'fila', 'numero']"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} butacas"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[20, 50, 100]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Butacas del Sector</h5>
+            <div class="flex items-center gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="loadButacas()" pTooltip="Actualizar" />
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="codigoButaca" style="min-width: 10rem">
+                Código <p-sortIcon field="codigoButaca" />
+            </th>
+            <th pSortableColumn="fila" style="min-width: 6rem">
+                Fila <p-sortIcon field="fila" />
+            </th>
+            <th pSortableColumn="numero" style="min-width: 6rem">
+                Número <p-sortIcon field="numero" />
+            </th>
+            <th pSortableColumn="activa" style="min-width: 6rem">
+                Activa <p-sortIcon field="activa" />
+            </th>
+            <th style="min-width: 10rem"></th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-butaca>
+        <tr>
+            <td>{{ butaca.codigoButaca }}</td>
+            <td>{{ butaca.fila }}</td>
+            <td>{{ butaca.numero }}</td>
+            <td>
+                <i class="pi" [ngClass]="butaca.activa ? 'pi-check-circle text-green-500' : 'pi-times-circle text-red-400'"></i>
+            </td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editButaca(butaca)" />
+                <p-button icon="pi pi-ban" severity="danger" [rounded]="true" [outlined]="true" (click)="desactivarButaca(butaca)" pTooltip="Desactivar" />
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="5" class="text-center p-4">No se encontraron butacas.</td>
+        </tr>
+    </ng-template>
+</p-table>
+}
+
+<!-- Dialog para crear/editar butaca individual -->
+<p-dialog [(visible)]="butacaDialog" [style]="{ width: '450px' }" [header]="isEdit ? 'Editar Butaca' : 'Nueva Butaca'" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="fila" class="block font-bold mb-3">Fila</label>
+                <input type="text" pInputText id="fila" [(ngModel)]="form.fila" required autofocus fluid />
+                <small class="text-red-500" *ngIf="submitted && !form.fila">La fila es requerida.</small>
+            </div>
+            <div>
+                <label for="numero" class="block font-bold mb-3">Número</label>
+                <p-inputnumber id="numero" [(ngModel)]="form.numero" fluid />
+            </div>
+            <div>
+                <label for="codigo" class="block font-bold mb-3">Código (opcional, se auto-genera)</label>
+                <input type="text" pInputText id="codigo" [(ngModel)]="form.codigoButaca" [placeholder]="(form.fila || '?') + '-' + (form.numero || '?')" fluid />
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveButaca()" />
+    </ng-template>
+</p-dialog>
+
+<!-- Dialog para carga por lote -->
+<p-dialog [(visible)]="loteDialog" [style]="{ width: '450px' }" header="Carga por Lote" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="lote-fila" class="block font-bold mb-3">Fila (ej: A, B, C)</label>
+                <input type="text" pInputText id="lote-fila" [(ngModel)]="loteForm.fila" required autofocus fluid />
+            </div>
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-6">
+                    <label for="lote-desde" class="block font-bold mb-3">Desde #</label>
+                    <p-inputnumber id="lote-desde" [(ngModel)]="loteForm.desde" [min]="1" fluid />
+                </div>
+                <div class="col-span-6">
+                    <label for="lote-hasta" class="block font-bold mb-3">Hasta #</label>
+                    <p-inputnumber id="lote-hasta" [(ngModel)]="loteForm.hasta" [min]="1" fluid />
+                </div>
+            </div>
+            <small class="text-surface-500">Se crearán {{ loteForm.hasta - loteForm.desde + 1 }} butacas: {{ loteForm.fila || '?' }}-{{ loteForm.desde }} … {{ loteForm.fila || '?' }}-{{ loteForm.hasta }}</small>
+        </div>
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="loteDialog = false" />
+        <p-button label="Crear Lote" icon="pi pi-check" (click)="crearLote()" />
+    </ng-template>
+</p-dialog>

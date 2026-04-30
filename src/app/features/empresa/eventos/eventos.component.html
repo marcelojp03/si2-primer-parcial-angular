@@ -1,0 +1,139 @@
+<p-toast />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nuevo Evento" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+    </ng-template>
+</p-toolbar>
+
+@if (loading && eventos().length === 0) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando eventos...</span>
+    </div>
+</div>
+} @else {
+<p-table
+    #dt
+    [value]="eventos()"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['nombre', 'lugar', 'ciudad', 'estadoEvento', 'tipoEvento.nombre']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [rowHover]="true"
+    dataKey="eventoId"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} eventos"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Gestión de Eventos</h5>
+            <div class="flex items-center gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="loadEventos()" pTooltip="Actualizar" />
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="nombre" style="min-width: 14rem">Nombre <p-sortIcon field="nombre" /></th>
+            <th pSortableColumn="tipoEvento.nombre" style="min-width: 10rem">Tipo <p-sortIcon field="tipoEvento.nombre" /></th>
+            <th pSortableColumn="lugar" style="min-width: 10rem">Lugar <p-sortIcon field="lugar" /></th>
+            <th pSortableColumn="ciudad" style="min-width: 8rem">Ciudad <p-sortIcon field="ciudad" /></th>
+            <th pSortableColumn="fechaInicio" style="min-width: 10rem">Fecha Inicio <p-sortIcon field="fechaInicio" /></th>
+            <th pSortableColumn="fechaFin" style="min-width: 10rem">Fecha Fin <p-sortIcon field="fechaFin" /></th>
+            <th pSortableColumn="estadoEvento" style="min-width: 8rem">Estado <p-sortIcon field="estadoEvento" /></th>
+            <th style="min-width: 14rem">Acciones</th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-evento>
+        <tr>
+            <td>{{ evento.nombre }}</td>
+            <td>{{ evento.tipoEvento?.nombre }}</td>
+            <td>{{ evento.lugar }}</td>
+            <td>{{ evento.ciudad }}</td>
+            <td>{{ evento.fechaInicio | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ evento.fechaFin | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+                <p-tag [value]="evento.estadoEvento" [severity]="getEstadoSeverity(evento.estadoEvento)" />
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" pTooltip="Editar" (click)="editEvento(evento)" />
+                    <p-button icon="pi pi-th-large" [rounded]="true" [outlined]="true" severity="info" pTooltip="Sectores" (click)="irASectores(evento)" />
+                    <p-button icon="pi pi-users" [rounded]="true" [outlined]="true" severity="help" pTooltip="Staff" (click)="irAStaff(evento)" />
+                    <p-button icon="pi pi-trash" [rounded]="true" [outlined]="true" severity="danger" pTooltip="Desactivar" (click)="desactivarEvento(evento)" />
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="8" class="text-center p-4">No se encontraron eventos.</td>
+        </tr>
+    </ng-template>
+</p-table>
+}
+
+<!-- Dialog para crear/editar evento -->
+<p-dialog [(visible)]="eventoDialog" [style]="{ width: '650px' }" [header]="isEdit ? 'Editar Evento' : 'Nuevo Evento'" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="nombreEvento" class="block font-bold mb-3">Nombre</label>
+                <input type="text" pInputText id="nombreEvento" [(ngModel)]="form.nombreEvento" required autofocus fluid />
+                @if (submitted && !form.nombreEvento) {
+                    <small class="text-red-500">El nombre es requerido.</small>
+                }
+            </div>
+
+            <div>
+                <label for="tipoEvento" class="block font-bold mb-3">Tipo de Evento</label>
+                <p-select [(ngModel)]="form.tipoEventoId" inputId="tipoEvento" [options]="tiposEvento()" optionLabel="nombre" optionValue="tipoEventoId" placeholder="Seleccione un tipo" appendTo="body" fluid />
+                @if (submitted && !form.tipoEventoId) {
+                    <small class="text-red-500">El tipo es requerido.</small>
+                }
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-6">
+                    <label for="lugar" class="block font-bold mb-3">Lugar</label>
+                    <input type="text" pInputText id="lugar" [(ngModel)]="form.lugar" fluid />
+                </div>
+                <div class="col-span-6">
+                    <label for="ciudad" class="block font-bold mb-3">Ciudad</label>
+                    <input type="text" pInputText id="ciudad" [(ngModel)]="form.ciudad" fluid />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-6">
+                    <label for="fechaInicio" class="block font-bold mb-3">Fecha Inicio</label>
+                    <p-datepicker id="fechaInicio" [(ngModel)]="fechaInicioDate" [showTime]="true" dateFormat="dd/mm/yy" appendTo="body" fluid />
+                </div>
+                <div class="col-span-6">
+                    <label for="fechaFin" class="block font-bold mb-3">Fecha Fin</label>
+                    <p-datepicker id="fechaFin" [(ngModel)]="fechaFinDate" [showTime]="true" dateFormat="dd/mm/yy" appendTo="body" fluid />
+                </div>
+            </div>
+
+
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveEvento()" />
+    </ng-template>
+</p-dialog>
+
+<p-confirmdialog [style]="{ width: '450px' }" />

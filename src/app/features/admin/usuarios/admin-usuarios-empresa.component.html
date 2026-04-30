@@ -1,0 +1,77 @@
+<p-toast />
+<p-confirmDialog />
+
+<p-tabs value="0">
+    <p-tablist>
+        <p-tab value="0">Asociar</p-tab>
+        <p-tab value="1">Actualizar Rol</p-tab>
+        <p-tab value="2">Desasociar</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+        <!-- Asociar -->
+        <p-tabpanel value="0">
+            <p-card header="Asociar Usuario a Empresa">
+                <div class="flex flex-col gap-5">
+                    <p-floatlabel variant="on">
+                        <input pInputText id="a_userId" type="number" [(ngModel)]="asociarForm.usuarioId" class="w-full" />
+                        <label for="a_userId">ID del Usuario *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="a_empresaId" type="number" [(ngModel)]="asociarForm.empresaId" class="w-full" />
+                        <label for="a_empresaId">ID de la Empresa *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <p-select id="a_rol" [(ngModel)]="asociarForm.rolEmpresaCodigo" [options]="rolesEmpresa" optionLabel="label" optionValue="value" class="w-full" />
+                        <label for="a_rol">Rol en Empresa *</label>
+                    </p-floatlabel>
+                    <p-button label="Asociar" icon="pi pi-link" (click)="asociar()" [loading]="loadingAsociar" />
+                </div>
+
+                @if (resultadoAsociar()) {
+                    <div class="mt-4 p-3 surface-ground border-round">
+                        <span class="text-green-500 font-semibold">Asociación exitosa:</span>
+                        Usuario {{ resultadoAsociar()!.usuario.correo }} → Empresa {{ resultadoAsociar()!.empresa.nombreEmpresa }} ({{ resultadoAsociar()!.rolEmpresaCodigo }})
+                    </div>
+                }
+            </p-card>
+        </p-tabpanel>
+
+        <!-- Actualizar Rol -->
+        <p-tabpanel value="1">
+            <p-card header="Actualizar Rol de Usuario en Empresa">
+                <div class="flex flex-col gap-5">
+                    <p-floatlabel variant="on">
+                        <input pInputText id="u_userId" type="number" [(ngModel)]="actualizarForm.usuarioId" class="w-full" />
+                        <label for="u_userId">ID del Usuario *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="u_empresaId" type="number" [(ngModel)]="actualizarForm.empresaId" class="w-full" />
+                        <label for="u_empresaId">ID de la Empresa *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <p-select id="u_rol" [(ngModel)]="actualizarForm.rolEmpresaCodigo" [options]="rolesEmpresa" optionLabel="label" optionValue="value" class="w-full" />
+                        <label for="u_rol">Nuevo Rol *</label>
+                    </p-floatlabel>
+                    <p-button label="Actualizar Rol" icon="pi pi-refresh" severity="warn" (click)="actualizarRol()" [loading]="loadingActualizar" />
+                </div>
+            </p-card>
+        </p-tabpanel>
+
+        <!-- Desasociar -->
+        <p-tabpanel value="2">
+            <p-card header="Desasociar Usuario de Empresa">
+                <div class="flex flex-col gap-5">
+                    <p-floatlabel variant="on">
+                        <input pInputText id="d_userId" type="number" [(ngModel)]="desasociarForm.usuarioId" class="w-full" />
+                        <label for="d_userId">ID del Usuario *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="d_empresaId" type="number" [(ngModel)]="desasociarForm.empresaId" class="w-full" />
+                        <label for="d_empresaId">ID de la Empresa *</label>
+                    </p-floatlabel>
+                    <p-button label="Desasociar" icon="pi pi-trash" severity="danger" (click)="confirmarDesasociar()" [loading]="loadingDesasociar" />
+                </div>
+            </p-card>
+        </p-tabpanel>
+    </p-tabpanels>
+</p-tabs>

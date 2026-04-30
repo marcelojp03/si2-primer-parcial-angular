@@ -1,0 +1,179 @@
+<p-toast />
+<p-confirmDialog />
+
+@if (loading && usuarios().length === 0) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando usuarios...</span>
+    </div>
+</div>
+} @else {
+<!-- ═══════ TABLA PRINCIPAL ═══════ -->
+<p-table
+    #dt
+    [value]="usuarios()"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['nombre', 'apellidoPaterno', 'correo', 'rolCodigo']"
+    [tableStyle]="{ 'min-width': '70rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Usuarios</h5>
+            <div class="flex gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="cargarUsuarios()" pTooltip="Actualizar" />
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+                <p-button label="Crear Usuario" icon="pi pi-user-plus" (click)="abrirCrear()" />
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="id" style="min-width: 4rem">ID <p-sortIcon field="id" /></th>
+            <th pSortableColumn="nombre" style="min-width: 10rem">Nombre <p-sortIcon field="nombre" /></th>
+            <th pSortableColumn="correo" style="min-width: 14rem">Correo <p-sortIcon field="correo" /></th>
+            <th pSortableColumn="rolCodigo" style="min-width: 6rem">Rol <p-sortIcon field="rolCodigo" /></th>
+            <th pSortableColumn="activo" style="min-width: 5rem">Estado <p-sortIcon field="activo" /></th>
+            <th style="min-width: 7rem">Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-u>
+        <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.nombre }} {{ u.apellidoPaterno || '' }}</td>
+            <td>{{ u.correo }}</td>
+            <td><p-tag [value]="u.rolCodigo" [severity]="rolSeverity(u.rolCodigo)" /></td>
+            <td><p-tag [value]="u.activo ? 'Activo' : 'Inactivo'" [severity]="u.activo ? 'success' : 'danger'" /></td>
+            <td class="flex gap-1">
+                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" (click)="verDetalle(u)" pTooltip="Ver detalle" />
+                <p-button icon="pi pi-building" [rounded]="true" [text]="true" severity="info" (click)="abrirEmpresas(u)" pTooltip="Gestionar empresas" />
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+        <tr><td colspan="6" class="text-center p-4">No se encontraron usuarios.</td></tr>
+    </ng-template>
+</p-table>
+}
+
+<!-- ═══════ MODAL CREAR USUARIO ═══════ -->
+<p-dialog [(visible)]="crearVisible" [style]="{ width: '500px' }" header="Crear Usuario" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-4 pt-2">
+            <p-floatlabel variant="on">
+                <input pInputText id="c_correo" [(ngModel)]="crearForm.correo" class="w-full" />
+                <label for="c_correo">Correo electrónico *</label>
+            </p-floatlabel>
+            <p-floatlabel variant="on">
+                <input pInputText id="c_nombre" [(ngModel)]="crearForm.nombre" class="w-full" />
+                <label for="c_nombre">Nombre *</label>
+            </p-floatlabel>
+            <div class="grid grid-cols-2 gap-4">
+                <p-floatlabel variant="on">
+                    <input pInputText id="c_apPat" [(ngModel)]="crearForm.apellidoPaterno" class="w-full" />
+                    <label for="c_apPat">Ap. Paterno</label>
+                </p-floatlabel>
+                <p-floatlabel variant="on">
+                    <input pInputText id="c_apMat" [(ngModel)]="crearForm.apellidoMaterno" class="w-full" />
+                    <label for="c_apMat">Ap. Materno</label>
+                </p-floatlabel>
+            </div>
+            <p-floatlabel variant="on">
+                <p-select id="c_rol" [(ngModel)]="crearForm.rolCodigo" [options]="rolesSistema" optionLabel="label" optionValue="value" class="w-full" />
+                <label for="c_rol">Rol *</label>
+            </p-floatlabel>
+            <div class="flex items-center gap-2">
+                <p-checkbox [(ngModel)]="asignarClave" [binary]="true" inputId="c_checkClave" />
+                <label for="c_checkClave">Asignar contraseña</label>
+            </div>
+            @if (asignarClave) {
+                <p-floatlabel variant="on">
+                    <p-password id="c_clave" [(ngModel)]="crearForm.clave" [toggleMask]="true" [feedback]="false" [fluid]="true" />
+                    <label for="c_clave">Contraseña</label>
+                </p-floatlabel>
+            }
+            <p class="text-surface-500 text-xs mt-0">Sin contraseña, el usuario deberá configurar clave vía OTP.</p>
+        </div>
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" (click)="crearVisible = false" />
+        <p-button label="Crear" icon="pi pi-check" (click)="crearUsuario()" [loading]="savingCrear" />
+    </ng-template>
+</p-dialog>
+
+<!-- ═══════ MODAL DETALLE USUARIO ═══════ -->
+<p-dialog [(visible)]="detalleVisible" [style]="{ width: '500px' }" header="Detalle de Usuario" [modal]="true">
+    <ng-template #content>
+        @if (usuarioDetalle()) {
+            <div class="flex flex-col gap-3">
+                @for (f of detalleFields; track f.key) {
+                    <div>
+                        <span class="block text-surface-500 text-sm mb-1">{{ f.label }}</span>
+                        <span class="font-medium">{{ getField(usuarioDetalle()!, f.key) }}</span>
+                    </div>
+                }
+            </div>
+        }
+    </ng-template>
+</p-dialog>
+
+<!-- ═══════ MODAL GESTIONAR EMPRESAS ═══════ -->
+<p-dialog [(visible)]="empresasVisible" [style]="{ width: '650px' }" [header]="'Empresas de ' + (empresasUsuario?.nombre || '')" [modal]="true">
+    <ng-template #content>
+        @if (loadingEmpresas) {
+            <div class="text-center p-4"><i class="pi pi-spin pi-spinner text-2xl"></i></div>
+        } @else {
+            <!-- Empresas asociadas -->
+            @if (empresasDelUsuario().length > 0) {
+                <div class="mb-4">
+                    <h6 class="text-sm font-semibold text-surface-500 mb-2">Empresas asociadas</h6>
+                    <div class="flex flex-col gap-2">
+                        @for (ue of empresasDelUsuario(); track ue.usuarioEmpresaId) {
+                            <div class="flex items-center justify-between p-3 surface-ground border-round">
+                                <div>
+                                    <span class="font-semibold">{{ ue.nombreEmpresa }}</span>
+                                    @if (editandoRolId === ue.usuarioEmpresaId) {
+                                        <p-select [(ngModel)]="editandoRolValor" [options]="rolesEmpresa" optionLabel="label" optionValue="value" class="ml-2" [style]="{ 'min-width': '130px' }" appendTo="body" />
+                                    } @else {
+                                        <p-tag [value]="ue.rolEmpresaCodigo" class="ml-2" />
+                                    }
+                                </div>
+                                <div class="flex gap-1">
+                                    @if (editandoRolId === ue.usuarioEmpresaId) {
+                                        <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" (click)="guardarRol(ue)" pTooltip="Guardar" [loading]="savingRol" />
+                                        <p-button icon="pi pi-times" [rounded]="true" [text]="true" (click)="cancelarEditarRol()" pTooltip="Cancelar" />
+                                    } @else {
+                                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" (click)="iniciarEditarRol(ue)" pTooltip="Cambiar Rol" />
+                                        <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" (click)="confirmarDesasociar(ue)" pTooltip="Desasociar" />
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            } @else {
+                <p class="text-surface-500 text-sm mb-4">Este usuario no tiene empresas asociadas.</p>
+            }
+
+            <!-- Asociar nueva empresa -->
+            <div class="border-t pt-4">
+                <h6 class="text-sm font-semibold text-surface-500 mb-3">Asociar nueva empresa</h6>
+                <div class="flex flex-col gap-3">
+                    <p-select [(ngModel)]="asociarEmpresaId" [options]="todasEmpresas()" optionLabel="nombreEmpresa" optionValue="idempresa" placeholder="Seleccionar empresa" class="w-full" [filter]="true" filterBy="nombreEmpresa" appendTo="body" />
+                    <p-select [(ngModel)]="asociarRol" [options]="rolesEmpresa" optionLabel="label" optionValue="value" placeholder="Seleccionar rol" class="w-full" appendTo="body" />
+                    <p-button label="Asociar" icon="pi pi-link" (click)="asociarEmpresa()" [loading]="savingAsociar" [disabled]="!asociarEmpresaId || !asociarRol" />
+                </div>
+            </div>
+        }
+    </ng-template>
+</p-dialog>

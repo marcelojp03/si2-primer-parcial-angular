@@ -1,0 +1,103 @@
+<p-toast />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <p-select
+                [options]="eventos()"
+                [(ngModel)]="eventoSeleccionado"
+                optionLabel="nombre"
+                placeholder="Seleccionar evento"
+                class="w-full md:w-80"
+                [loading]="loadingEventos"
+                (onChange)="onEventoChange()"
+            />
+            <p-select
+                [options]="estados"
+                [(ngModel)]="filtroEstado"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Estado"
+                class="w-full md:w-48"
+                (onChange)="onEstadoChange()"
+            />
+        </div>
+    </ng-template>
+</p-toolbar>
+
+@if (loading && tickets().length === 0 && eventoSeleccionado) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando tickets...</span>
+    </div>
+</div>
+} @else {
+<p-table
+    #dt
+    [value]="tickets()"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['codigoTicket', 'sectorNombre', 'butaca', 'ownerCorreo', 'ownerNombre', 'consumidoPor']"
+    [tableStyle]="{ 'min-width': '70rem' }"
+    [rowHover]="true"
+    dataKey="ticketId"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} tickets"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 25, 50, 100]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Tickets del Evento</h5>
+            <div class="flex items-center gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="loadEventos()" pTooltip="Actualizar" />
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="codigoTicket" style="min-width: 14rem">Código <p-sortIcon field="codigoTicket" /></th>
+            <th pSortableColumn="sectorNombre" style="min-width: 8rem">Sector <p-sortIcon field="sectorNombre" /></th>
+            <th pSortableColumn="butaca" style="min-width: 6rem">Butaca <p-sortIcon field="butaca" /></th>
+            <th pSortableColumn="ownerNombre" style="min-width: 8rem">Propietario <p-sortIcon field="ownerNombre" /></th>
+            <th pSortableColumn="ownerCorreo" style="min-width: 10rem">Correo <p-sortIcon field="ownerCorreo" /></th>
+            <th pSortableColumn="fechaEmision" style="min-width: 10rem">Fecha Emisión <p-sortIcon field="fechaEmision" /></th>
+            <th pSortableColumn="estado" style="min-width: 6rem">Estado <p-sortIcon field="estado" /></th>
+            <th pSortableColumn="consumidoPor" style="min-width: 10rem">Consumido por <p-sortIcon field="consumidoPor" /></th>
+            <th pSortableColumn="fechaConsumo" style="min-width: 10rem">Fecha Consumo <p-sortIcon field="fechaConsumo" /></th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-ticket>
+        <tr>
+            <td class="font-mono text-sm">{{ ticket.codigoTicket | slice:0:8 }}...</td>
+            <td>{{ ticket.sectorNombre }}</td>
+            <td>{{ ticket.butaca || '-' }}</td>
+            <td>{{ ticket.ownerNombre }}</td>
+            <td>{{ ticket.ownerCorreo }}</td>
+            <td>{{ ticket.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td><p-tag [value]="ticket.estado" [severity]="getEstadoSeverity(ticket.estado)" /></td>
+            <td>{{ ticket.consumidoPor || '-' }}</td>
+            <td>{{ ticket.fechaConsumo ? (ticket.fechaConsumo | date: 'dd/MM/yyyy HH:mm') : '-' }}</td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="9" class="text-center p-4">
+                @if (!eventoSeleccionado) {
+                    Seleccione un evento para ver sus tickets.
+                } @else {
+                    No se encontraron tickets.
+                }
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+}

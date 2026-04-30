@@ -1,0 +1,93 @@
+<p-toast />
+
+@if (loading && transacciones().length === 0) {
+<div class="border border-surface rounded-lg py-12">
+    <div class="flex flex-col items-center justify-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <span class="mt-3 text-surface-500">Cargando transacciones...</span>
+    </div>
+</div>
+} @else {
+<p-table
+    #dt
+    [value]="transacciones()"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['idqr', 'tipoTransaccionCodigo', 'estadoTransaccionCodigo', 'moneda']"
+    [tableStyle]="{ 'min-width': '80rem' }"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} transacciones"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [loading]="loading"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Transacciones de Pago</h5>
+            <div class="flex gap-2">
+                <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" (click)="cargar()" pTooltip="Actualizar" />
+                <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+            </p-iconfield>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th pSortableColumn="id" style="min-width: 4rem">ID <p-sortIcon field="id" /></th>
+            <th pSortableColumn="idqr" style="min-width: 8rem">QR <p-sortIcon field="idqr" /></th>
+            <th pSortableColumn="tipoTransaccionCodigo" style="min-width: 6rem">Tipo <p-sortIcon field="tipoTransaccionCodigo" /></th>
+            <th pSortableColumn="estadoTransaccionCodigo" style="min-width: 6rem">Estado <p-sortIcon field="estadoTransaccionCodigo" /></th>
+            <th pSortableColumn="montoTotal" style="min-width: 6rem">Monto Total <p-sortIcon field="montoTotal" /></th>
+            <th pSortableColumn="moneda" style="min-width: 4rem">Moneda <p-sortIcon field="moneda" /></th>
+            <th pSortableColumn="cantidadTickets" style="min-width: 5rem">Tickets <p-sortIcon field="cantidadTickets" /></th>
+            <th pSortableColumn="fechaConfirmacion" style="min-width: 8rem">Fecha Conf. <p-sortIcon field="fechaConfirmacion" /></th>
+            <th style="min-width: 4rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-t>
+        <tr>
+            <td>{{ t.id }}</td>
+            <td class="text-sm font-mono">{{ t.idqr }}</td>
+            <td><p-tag [value]="t.tipoTransaccionCodigo" /></td>
+            <td><p-tag [value]="t.estadoTransaccionCodigo" [severity]="estadoSeverity(t.estadoTransaccionCodigo)" /></td>
+            <td class="font-semibold">{{ t.montoTotal | number:'1.2-2' }}</td>
+            <td>{{ t.moneda }}</td>
+            <td>{{ t.cantidadTickets }}</td>
+            <td>{{ t.fechaConfirmacion ? (t.fechaConfirmacion | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+            <td class="flex gap-1">
+                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" (click)="verDetalle(t)" pTooltip="Ver detalle" />
+                @if (t.estadoTransaccionCodigo === 'COMPLETADA' || t.estadoTransaccionCodigo === 'CONFIRMADA') {
+                    <p-button icon="pi pi-envelope" [rounded]="true" [text]="true" severity="info" (click)="reenviarBoletos(t)" pTooltip="Reenviar boletos" />
+                }
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+        <tr><td colspan="9" class="text-center p-4">No se encontraron transacciones.</td></tr>
+    </ng-template>
+</p-table>
+}
+
+<!-- Detalle Dialog -->
+<p-dialog [(visible)]="detalleVisible" [style]="{ width: '550px' }" header="Detalle de Transacción" [modal]="true">
+    <ng-template #content>
+        @if (detalle) {
+            <div class="flex flex-col gap-4">
+                @for (f of detalleFields; track f.key) {
+                    <div>
+                        <span class="block text-surface-500 text-sm mb-1">{{ f.label }}</span>
+                        <span class="font-medium">{{ getField(detalle, f.key) }}</span>
+                    </div>
+                }
+            </div>
+            @if (detalle.estadoTransaccionCodigo === 'COMPLETADA' || detalle.estadoTransaccionCodigo === 'CONFIRMADA') {
+                <div class="mt-4 pt-4 border-t">
+                    <p-button label="Reenviar Boletos" icon="pi pi-envelope" severity="info" (click)="reenviarBoletos(detalle)" [loading]="reenviando" />
+                </div>
+            }
+        }
+    </ng-template>
+</p-dialog>
