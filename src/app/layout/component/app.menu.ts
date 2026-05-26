@@ -36,6 +36,7 @@ export class AppMenu implements OnInit {
                 items: [
                     { label: 'Dashboard', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/dashboard'] },
                     { label: 'Incidentes', icon: 'pi pi-fw pi-exclamation-triangle', routerLink: ['/incidents'] },
+                    { label: 'Mapa en vivo', icon: 'pi pi-fw pi-map', routerLink: ['/incidents/map'] },
                     ...(isAdminTaller ? [
                         { label: 'Invitaciones', icon: 'pi pi-fw pi-bell', routerLink: ['/invitations'] },
                         { label: 'Técnicos', icon: 'pi pi-fw pi-wrench', routerLink: ['/technicians'] },

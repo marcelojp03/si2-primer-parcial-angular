@@ -8,11 +8,12 @@ import { MetricsService } from '@/core/services/metrics.service';
 import { AuthService } from '@/core/services/auth.service';
 import { DashboardMetrics } from '@/core/models/metrics.model';
 import { KpiDashboardComponent } from './kpi-dashboard/kpi-dashboard.component';
+import { ChartsDashboardComponent } from './charts-dashboard/charts-dashboard.component';
 
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, RouterModule, CardModule, SkeletonModule, TagModule, KpiDashboardComponent],
+    imports: [CommonModule, RouterModule, CardModule, SkeletonModule, TagModule, KpiDashboardComponent, ChartsDashboardComponent],
     template: `
         <div class="p-6">
             <div class="mb-6">
@@ -123,6 +124,9 @@ import { KpiDashboardComponent } from './kpi-dashboard/kpi-dashboard.component';
 
         <!-- KPIs del 2do parcial -->
         <app-kpi-dashboard />
+
+        <!-- Gráficos -->
+        <app-charts-dashboard />
     `
 })
 export class DashboardComponent implements OnInit {

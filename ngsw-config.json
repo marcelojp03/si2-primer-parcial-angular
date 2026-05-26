@@ -26,5 +26,25 @@
         ]
       }
     }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-listados",
+      "urls": [
+        "/api/v1/incidents",
+        "/api/v1/metrics/**",
+        "/api/v1/notifications",
+        "/api/v1/assignments/**",
+        "/api/v1/technicians",
+        "/api/v1/workshops",
+        "/api/v1/specialties"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "5m",
+        "timeout": "10s"
+      }
+    }
   ]
 }

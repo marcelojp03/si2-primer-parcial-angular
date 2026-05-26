@@ -40,6 +40,10 @@ export const appRoutes: Routes = [
                 loadComponent: () => import('./app/features/incidents/incident-list/incident-list.component').then(m => m.IncidentListComponent)
             },
             {
+                path: 'incidents/map',
+                loadComponent: () => import('./app/features/incidents/incident-map/incident-map.component').then(m => m.IncidentMapComponent)
+            },
+            {
                 path: 'incidents/:id',
                 loadComponent: () => import('./app/features/incidents/incident-detail/incident-detail.component').then(m => m.IncidentDetailComponent)
             },

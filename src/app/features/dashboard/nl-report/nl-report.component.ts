@@ -6,6 +6,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { ReportService, NlReportResult } from '@/core/services/report.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-nl-report',
@@ -72,12 +74,25 @@ import { ReportService, NlReportResult } from '@/core/services/report.service';
       @if (result) {
         <div class="bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
           <!-- SQL generado -->
-          <details class="mb-4">
-            <summary class="text-sm font-medium cursor-pointer text-surface-600 dark:text-surface-400 select-none">
-              <i class="pi pi-code mr-1"></i>SQL generado ({{ result.rows_count }} filas)
-            </summary>
-            <pre class="mt-2 text-xs bg-surface-100 dark:bg-surface-800 rounded p-3 overflow-x-auto whitespace-pre-wrap">{{ result.sql }}</pre>
-          </details>
+          <div class="flex items-center justify-between mb-3">
+            <details class="flex-1">
+              <summary class="text-sm font-medium cursor-pointer text-surface-600 dark:text-surface-400 select-none">
+                <i class="pi pi-code mr-1"></i>SQL generado ({{ result.rows_count }} filas)
+              </summary>
+              <pre class="mt-2 text-xs bg-surface-100 dark:bg-surface-800 rounded p-3 overflow-x-auto whitespace-pre-wrap">{{ result.sql }}</pre>
+            </details>
+            @if (result.data.length > 0) {
+              <p-button
+                icon="pi pi-file-pdf"
+                label="Descargar PDF"
+                severity="danger"
+                outlined
+                size="small"
+                (onClick)="downloadPdf()"
+                class="ml-4 flex-shrink-0"
+              />
+            }
+          </div>
 
           <!-- Tabla de resultados -->
           @if (result.data.length > 0) {
@@ -149,5 +164,40 @@ export class NlReportComponent {
   clear(): void {
     this.query = '';
     this.result = null;
+  }
+
+  downloadPdf(): void {
+    if (!this.result) return;
+    const doc = new jsPDF({ orientation: 'landscape' });
+
+    // Título
+    doc.setFontSize(16);
+    doc.text('Reporte en Lenguaje Natural', 14, 18);
+
+    // Consulta
+    doc.setFontSize(11);
+    doc.setTextColor(80);
+    doc.text(`Consulta: ${this.result.query}`, 14, 28);
+
+    // SQL generado
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    const sqlLines = doc.splitTextToSize(`SQL: ${this.result.sql}`, 260);
+    doc.text(sqlLines, 14, 38);
+
+    const yAfterSql = 38 + sqlLines.length * 5 + 6;
+
+    // Tabla
+    autoTable(doc, {
+      startY: yAfterSql,
+      head: [this.resultColumns],
+      body: this.result.data.map(row =>
+        this.resultColumns.map(c => String(row[c] ?? ''))
+      ),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`reporte-nl-${Date.now()}.pdf`);
   }
 }
