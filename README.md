@@ -1,59 +1,118 @@
-# Sakai19
+# AuxilioMecánico — Panel de Administración
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.5.
+[![Angular](https://img.shields.io/badge/Angular-18-DD0031.svg)](https://angular.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://typescriptlang.org/)
+[![PrimeNG](https://img.shields.io/badge/PrimeNG-17-0065A3.svg)](https://primeng.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC.svg)](https://tailwindcss.com/)
+[![JWT](https://img.shields.io/badge/Auth-JWT-000000.svg)](https://jwt.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Development server
+Web admin dashboard for an intelligent vehicle emergency assistance platform. Supports two roles: **workshop managers** who handle incoming service requests and manage their technicians, and **platform administrators** with a global cross-tenant view.
 
-To start a local development server, run:
+---
+
+## Overview
+
+- Workshop managers receive incident assignments, accept or reject service requests, track technician activity and monitor workshop performance metrics
+- Platform administrators manage tenants, view global dashboards and oversee the entire operation
+- Real-time notifications via WebSocket keep both roles instantly informed of status changes
+
+---
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| **Framework** | Angular 18 (standalone components) |
+| **Language** | TypeScript 5.x |
+| **UI Library** | PrimeNG 17 |
+| **Styling** | TailwindCSS 3.x |
+| **HTTP** | Angular HttpClient + interceptors |
+| **Auth** | JWT stored in `sessionStorage` |
+| **Real-time** | WebSocket client |
+| **State** | Angular Signals + Services |
+
+---
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Backend API running at `http://localhost:8000`
+
+---
+
+## Setup
+
+### 1. Clone and install dependencies
+
+```bash
+git clone https://github.com/marcelojp03/si2-primer-parcial-angular.git
+cd si2-primer-parcial-angular
+
+npm install
+```
+
+### 2. Configure environment
+
+Edit `src/environments/environment.ts`:
+
+```ts
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8000/api/v1',
+  wsUrl: 'ws://localhost:8000/ws',
+};
+```
+
+### 3. Run the development server
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+App → `http://localhost:4200`
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Build
 
 ```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
+# Development build
 ng build
+
+# Production build
+ng build --configuration production
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## Project Structure
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+```
+src/
+└── app/
+    ├── core/
+    │   ├── services/       # Auth, HTTP, WebSocket services
+    │   ├── guards/         # Route guards (role-based)
+    │   └── interceptors/   # JWT injection, error handling
+    ├── shared/
+    │   └── components/     # Reusable UI components
+    └── features/
+        ├── auth/           # Login
+        ├── dashboard/      # Metrics & KPIs
+        ├── incidents/      # Incident management
+        ├── assignments/    # Service assignment workflow
+        ├── technicians/    # Technician management
+        ├── workshops/      # Workshop configuration
+        └── admin/          # Platform admin (tenants, global metrics)
 ```
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## Related
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Repository | Description |
+|------------|-------------|
+| [si2-primer-parcial-fastapi](https://github.com/marcelojp03/si2-primer-parcial-fastapi) | FastAPI backend API |
+| [si2-primer-parcial-flutter](https://github.com/marcelojp03/si2-primer-parcial-flutter) | Flutter mobile app |
