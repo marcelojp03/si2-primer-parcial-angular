@@ -7,11 +7,12 @@ import { TagModule } from 'primeng/tag';
 import { MetricsService } from '@/core/services/metrics.service';
 import { AuthService } from '@/core/services/auth.service';
 import { DashboardMetrics } from '@/core/models/metrics.model';
+import { KpiDashboardComponent } from './kpi-dashboard/kpi-dashboard.component';
 
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, RouterModule, CardModule, SkeletonModule, TagModule],
+    imports: [CommonModule, RouterModule, CardModule, SkeletonModule, TagModule, KpiDashboardComponent],
     template: `
         <div class="p-6">
             <div class="mb-6">
@@ -119,6 +120,9 @@ import { DashboardMetrics } from '@/core/models/metrics.model';
                 </div>
             }
         </div>
+
+        <!-- KPIs del 2do parcial -->
+        <app-kpi-dashboard />
     `
 })
 export class DashboardComponent implements OnInit {

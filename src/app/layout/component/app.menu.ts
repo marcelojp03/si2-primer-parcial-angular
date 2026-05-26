@@ -27,6 +27,8 @@ export class AppMenu implements OnInit {
     ngOnInit() {
         const user = this.authService.getCurrentUser();
         const isSuperadmin = user?.role === 'SUPERADMIN';
+        const isPlatformAdmin = isSuperadmin && user?.is_platform_admin === true;
+        const isAdminTaller = user?.role === 'ADMIN_TALLER';
 
         this.model = [
             {
@@ -34,17 +36,35 @@ export class AppMenu implements OnInit {
                 items: [
                     { label: 'Dashboard', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/dashboard'] },
                     { label: 'Incidentes', icon: 'pi pi-fw pi-exclamation-triangle', routerLink: ['/incidents'] },
-                    ...(!isSuperadmin ? [
+                    ...(isAdminTaller ? [
+                        { label: 'Invitaciones', icon: 'pi pi-fw pi-bell', routerLink: ['/invitations'] },
+                        { label: 'Técnicos', icon: 'pi pi-fw pi-wrench', routerLink: ['/technicians'] },
+                        { label: 'Mi Taller', icon: 'pi pi-fw pi-building', routerLink: ['/workshop'] },
+                    ] : []),
+                    ...(!isSuperadmin && !isAdminTaller ? [
                         { label: 'Técnicos', icon: 'pi pi-fw pi-wrench', routerLink: ['/technicians'] },
                         { label: 'Mi Taller', icon: 'pi pi-fw pi-building', routerLink: ['/workshop'] },
                     ] : [])
                 ]
             },
-            ...(isSuperadmin ? [
+            ...(isSuperadmin && !isPlatformAdmin ? [
                 { separator: true } as MenuItem,
                 {
                     label: 'Administración',
                     items: [
+                        { label: 'Usuarios', icon: 'pi pi-fw pi-users', routerLink: ['/admin/users'] },
+                        { label: 'Talleres', icon: 'pi pi-fw pi-car', routerLink: ['/admin/workshops'] },
+                        { label: 'Especialidades', icon: 'pi pi-fw pi-tags', routerLink: ['/admin/specialties'] },
+                    ]
+                } as MenuItem
+            ] : []),
+            ...(isPlatformAdmin ? [
+                { separator: true } as MenuItem,
+                {
+                    label: 'Plataforma',
+                    items: [
+                        { label: 'Tenants', icon: 'pi pi-fw pi-sitemap', routerLink: ['/platform/tenants'] },
+                        { label: 'Reporte NL', icon: 'pi pi-fw pi-search-plus', routerLink: ['/reports/nl'] },
                         { label: 'Usuarios', icon: 'pi pi-fw pi-users', routerLink: ['/admin/users'] },
                         { label: 'Talleres', icon: 'pi pi-fw pi-car', routerLink: ['/admin/workshops'] },
                         { label: 'Especialidades', icon: 'pi pi-fw pi-tags', routerLink: ['/admin/specialties'] },

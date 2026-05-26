@@ -57,6 +57,13 @@ export class AssignmentService {
         );
     }
 
+    /** GET /assignments/invitations/pending — invitaciones pendientes con TTL */
+    getPendingInvitations(): Observable<AssignmentCandidate[]> {
+        return this.http.get<AssignmentCandidate[]>(`${this.apiUrl}/assignments/invitations/pending`).pipe(
+            catchError(() => [])
+        );
+    }
+
     private handleError(err: any, summary: string): Observable<never> {
         const detail = err?.error?.detail || 'Error inesperado';
         this.messageService.add({ severity: 'error', summary, detail, life: 4000 });

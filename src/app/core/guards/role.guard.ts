@@ -18,3 +18,14 @@ export function roleGuard(requiredRole: 'SUPERADMIN' | 'ADMIN_TALLER'): CanActiv
     };
 }
 
+/** Guard para ADMIN_PLATAFORMA (SUPERADMIN con is_platform_admin = true) */
+export const platformAdminGuard: CanActivateFn = () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+    const user = auth.getCurrentUser();
+    if (!user) return router.createUrlTree(['/login']);
+    if (user.role === 'SUPERADMIN' && user.is_platform_admin) return true;
+    return router.createUrlTree(['/dashboard']);
+};
+
+

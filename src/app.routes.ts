@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AppLayout } from '@/layout/component/app.layout';
 import { authGuard } from './app/core/guards/auth.guard';
-import { roleGuard } from './app/core/guards/role.guard';
+import { roleGuard, platformAdminGuard } from './app/core/guards/role.guard';
 
 export const appRoutes: Routes = [
     // ─── Rutas públicas ──────────────────────────────────────────────────────
@@ -50,6 +50,12 @@ export const appRoutes: Routes = [
                 loadComponent: () => import('./app/features/assignments/assignment-detail/assignment-detail.component').then(m => m.AssignmentDetailComponent)
             },
 
+            // Invitaciones con TTL (CU23/24)
+            {
+                path: 'invitations',
+                loadComponent: () => import('./app/features/assignments/invitations/invitations.component').then(m => m.InvitationsComponent)
+            },
+
             // Técnicos
             {
                 path: 'technicians',
@@ -77,6 +83,19 @@ export const appRoutes: Routes = [
                 path: 'admin/specialties',
                 canActivate: [roleGuard('SUPERADMIN')],
                 loadComponent: () => import('./app/features/admin/specialty-manager/specialty-manager.component').then(m => m.SpecialtyManagerComponent)
+            },
+
+            // ─── ADMIN_PLATAFORMA ─────────────────────────────────────────────
+            {
+                path: 'platform/tenants',
+                canActivate: [platformAdminGuard],
+                loadComponent: () => import('./app/features/admin-plataforma/tenants/tenant-list.component').then(m => m.TenantListComponent)
+            },
+
+            // ─── Reporte NL (CU35) ────────────────────────────────────────────
+            {
+                path: 'reports/nl',
+                loadComponent: () => import('./app/features/dashboard/nl-report/nl-report.component').then(m => m.NlReportComponent)
             },
         ]
     },

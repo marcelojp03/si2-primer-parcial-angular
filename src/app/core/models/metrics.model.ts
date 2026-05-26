@@ -12,6 +12,20 @@ export interface DashboardMetrics {
     total_technicians: number;
 }
 
+export interface KPIDashboard {
+    tenant_id: number | null;
+    total_incidents: number;
+    incidents_last_30_days: number;
+    avg_response_minutes: number;
+    sla_compliance_pct: number;
+    total_assignments: number;
+    active_assignments: number;
+    active_workshops: number;
+    avg_reputation_score: number;
+    total_revenue: number;
+    average_rating: number;
+}
+
 export interface Notification {
     id: number;
     user_id?: number;

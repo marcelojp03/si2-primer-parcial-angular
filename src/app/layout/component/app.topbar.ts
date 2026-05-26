@@ -7,15 +7,17 @@ import { StyleClassModule } from 'primeng/styleclass';
 import { MenuModule } from 'primeng/menu';
 import { Menu } from 'primeng/menu';
 import { AppConfigurator } from './app.configurator';
+import { NotificationsPanelComponent } from './notifications-panel.component';
 import { LayoutService } from '../service/layout.service';
 import { AuthService } from '@/core/services/auth.service';
+import { WsService } from '@/core/services/ws.service';
 import { UserAuth } from '@/core/models/auth.model';
 import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-topbar',
     standalone: true,
-    imports: [RouterModule, CommonModule, FormsModule, StyleClassModule, MenuModule, AppConfigurator],
+    imports: [RouterModule, CommonModule, FormsModule, StyleClassModule, MenuModule, AppConfigurator, NotificationsPanelComponent],
     template: `
         <p-menu #userMenu [model]="userMenuItems" [popup]="true" appendTo="body" />
 
@@ -59,6 +61,7 @@ import { Subscription } from 'rxjs';
 
                 <div class="layout-topbar-menu hidden lg:block">
                     <div class="layout-topbar-menu-content">
+                        <app-notifications-panel />
                         <button type="button" class="layout-topbar-action" (click)="userMenu.toggle($event)">
                             <i class="pi pi-user"></i>
                             <span>{{ usuario?.full_name || 'Perfil' }}</span>
@@ -77,6 +80,7 @@ export class AppTopbar implements OnInit, OnDestroy {
 
     layoutService = inject(LayoutService);
     private authService = inject(AuthService);
+    private wsService = inject(WsService);
     private router = inject(Router);
     private subs: Subscription[] = [];
 
@@ -85,6 +89,9 @@ export class AppTopbar implements OnInit, OnDestroy {
             this.authService.currentUser$.subscribe((user) => {
                 this.usuario = user;
                 this.buildUserMenu(user);
+                if (user) {
+                    this.wsService.connect();
+                }
             })
         );
     }

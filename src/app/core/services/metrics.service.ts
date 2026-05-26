@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
-import { DashboardMetrics, Notification } from '../models/metrics.model';
+import { DashboardMetrics, KPIDashboard, Notification } from '../models/metrics.model';
 
 @Injectable({ providedIn: 'root' })
 export class MetricsService {
@@ -15,6 +15,12 @@ export class MetricsService {
     getDashboard(): Observable<DashboardMetrics> {
         return this.http.get<DashboardMetrics>(`${this.apiUrl}/metrics/dashboard`).pipe(
             catchError(err => this.handleError(err, 'Error al cargar métricas'))
+        );
+    }
+
+    getKpis(): Observable<KPIDashboard> {
+        return this.http.get<KPIDashboard>(`${this.apiUrl}/metrics/kpis`).pipe(
+            catchError(err => this.handleError(err, 'Error al cargar KPIs'))
         );
     }
 
@@ -30,4 +36,5 @@ export class MetricsService {
         return throwError(() => err);
     }
 }
+
 

@@ -7,6 +7,7 @@ export const environment = {
   baseUrl: 'http://localhost:8029/api/v1',
   api: {
     baseUrl: 'http://localhost:8029/api/v1',
+    wsUrl: 'ws://localhost:8029/ws',
     timeout: 30000,
   },
   mock: false,

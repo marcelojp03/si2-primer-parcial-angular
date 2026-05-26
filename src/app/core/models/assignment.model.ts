@@ -37,6 +37,7 @@ export interface AssignmentCandidate {
     estimated_arrival_minutes?: number;
     notified?: boolean;
     notified_at?: string;
+    invitation_deadline?: string;
     response_status: CandidateResponseStatus;
     responded_at?: string;
     response_note?: string;

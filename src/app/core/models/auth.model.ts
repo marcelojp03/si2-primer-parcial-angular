@@ -21,6 +21,8 @@ export interface UserAuth {
     ci?: string;
     phone?: string;
     status?: 'ACTIVO' | 'INACTIVO';
+    is_platform_admin?: boolean;
+    tenant_id?: number;
     created_at?: string;
     updated_at?: string;
 }
