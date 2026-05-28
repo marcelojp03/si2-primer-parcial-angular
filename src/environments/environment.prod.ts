@@ -3,6 +3,7 @@ export const environment = {
   baseUrl: 'https://j4mtwusjdr.us-east-1.awsapprunner.com/api/v1',
   api: {
     baseUrl: 'https://j4mtwusjdr.us-east-1.awsapprunner.com/api/v1',
+    wsUrl: 'wss://j4mtwusjdr.us-east-1.awsapprunner.com/ws',
     timeout: 30000,
   },
   mock: false,
