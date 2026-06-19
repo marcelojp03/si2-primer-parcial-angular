@@ -12,6 +12,23 @@ export interface DashboardMetrics {
     total_technicians: number;
 }
 
+export interface ZoneIncidentCount {
+    lat: number;
+    lng: number;
+    count: number;
+    label: string;
+}
+
+export interface WorkshopEfficiency {
+    workshop_id: number;
+    name: string;
+    score: number;
+    avg_response_minutes: number | null;
+    completion_rate: number | null;
+    reputation_score: number | null;
+    total_assignments: number;
+}
+
 export interface KPIDashboard {
     tenant_id: number | null;
     total_incidents: number;

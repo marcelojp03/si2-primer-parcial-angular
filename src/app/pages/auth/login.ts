@@ -26,94 +26,83 @@ import { StyleClassModule } from 'primeng/styleclass';
 
             <!-- Left branded panel -->
             <div class="hidden lg:flex lg:w-5/12 relative overflow-hidden flex-col items-center justify-center"
-                 style="background: linear-gradient(160deg, #071225 0%, #0d2145 55%, #0a2e60 100%)">
-                <!-- Decorative glow circles -->
+                 style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 55%, #334155 100%)">
                 <div class="absolute top-[-8%] right-[-12%] w-96 h-96 rounded-full pointer-events-none"
-                     style="background: radial-gradient(circle, rgba(79,195,247,0.12), transparent 70%)"></div>
+                     style="background: radial-gradient(circle, rgba(249,115,22,0.12), transparent 70%)"></div>
                 <div class="absolute bottom-[-12%] left-[-8%] w-80 h-80 rounded-full pointer-events-none"
-                     style="background: radial-gradient(circle, rgba(41,121,255,0.10), transparent 70%)"></div>
+                     style="background: radial-gradient(circle, rgba(59,130,246,0.10), transparent 70%)"></div>
 
                 <div class="relative z-10 flex flex-col items-center text-center px-12 max-w-xs">
-                    <!-- Ticket icon badge -->
                     <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-8"
                          style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12)">
-                        <i class="pi pi-ticket text-white" style="font-size: 2.2rem"></i>
+                        <i class="pi pi-car text-white" style="font-size: 2.2rem"></i>
                     </div>
 
-                    <h1 class="text-white text-4xl font-bold mb-3 tracking-tight">Ticketera</h1>
+                    <h1 class="text-white text-4xl font-bold mb-3 tracking-tight">Auxilio Mecánico</h1>
                     <p class="text-white/50 text-sm leading-relaxed mb-10">
-                        Gestión integral de eventos, sectores y venta de tickets
+                        Plataforma inteligente de atención de emergencias vehiculares
                     </p>
 
                     <div class="grid grid-cols-2 gap-4 w-full">
                         <div class="flex items-center gap-3 rounded-xl p-3"
                              style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
-                            <i class="pi pi-calendar text-white/60 text-base"></i>
-                            <span class="text-white/60 text-xs">Eventos</span>
+                            <i class="pi pi-map-marker text-white/60 text-base"></i>
+                            <span class="text-white/60 text-xs">Geolocalización</span>
                         </div>
                         <div class="flex items-center gap-3 rounded-xl p-3"
                              style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
-                            <i class="pi pi-th-large text-white/60 text-base"></i>
-                            <span class="text-white/60 text-xs">Sectores</span>
+                            <i class="pi pi-microchip text-white/60 text-base"></i>
+                            <span class="text-white/60 text-xs">IA</span>
                         </div>
                         <div class="flex items-center gap-3 rounded-xl p-3"
                              style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
-                            <i class="pi pi-ticket text-white/60 text-base"></i>
-                            <span class="text-white/60 text-xs">Butacas</span>
+                            <i class="pi pi-bolt text-white/60 text-base"></i>
+                            <span class="text-white/60 text-xs">Tiempo real</span>
                         </div>
                         <div class="flex items-center gap-3 rounded-xl p-3"
                              style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
-                            <i class="pi pi-users text-white/60 text-base"></i>
-                            <span class="text-white/60 text-xs">Staff</span>
+                            <i class="pi pi-credit-card text-white/60 text-base"></i>
+                            <span class="text-white/60 text-xs">Pagos</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Bottom powered-by -->
-                <div class="absolute bottom-8 flex items-center gap-2 opacity-30">
-                    <img src="/logovpay.png" alt="VPay" class="h-5 object-contain brightness-0 invert" />
                 </div>
             </div>
 
             <!-- Right form panel -->
             <div class="w-full lg:w-7/12 flex items-center justify-center bg-surface-0 dark:bg-surface-950 p-8 relative">
-                <!-- Dark mode toggle -->
                 <button type="button" class="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer" (click)="toggleDarkMode()">
                     <i [ngClass]="{ 'pi': true, 'pi-moon': layoutService.isDarkTheme(), 'pi-sun': !layoutService.isDarkTheme() }" class="text-lg"></i>
                 </button>
 
                 <div class="hidden">
-                        <button
-                            class="layout-topbar-action layout-topbar-action-highlight"
-                            pStyleClass="@next"
-                            enterFromClass="hidden"
-                            enterActiveClass="animate-scalein"
-                            leaveToClass="hidden"
-                            leaveActiveClass="animate-fadeout"
-                            [hideOnOutsideClick]="true"
-                        >
-                            <i class="pi pi-palette"></i>
-                        </button>
-                        <app-configurator />
+                    <button pStyleClass="@next" enterFromClass="hidden" enterActiveClass="animate-scalein" leaveToClass="hidden" leaveActiveClass="animate-fadeout" [hideOnOutsideClick]="true">
+                        <i class="pi pi-palette"></i>
+                    </button>
+                    <app-configurator />
                 </div>
-                <div class="w-full max-w-sm">
 
-                    <!-- Logo -->
+                <div class="w-full max-w-sm">
                     <div class="flex justify-center mb-10">
-                        <img src="/logovpay.png" alt="VPay" class="h-12 object-contain dark:brightness-0 dark:invert" />
+                        <i class="pi pi-car text-5xl text-orange-500"></i>
                     </div>
 
                     <div class="mb-8">
                         <h2 class="text-surface-900 dark:text-surface-0 text-2xl font-bold mb-1">Iniciar sesión</h2>
-                        <p class="text-surface-400 dark:text-surface-500 text-sm">Panel de gestión &mdash; Ticketera</p>
+                        <p class="text-surface-400 dark:text-surface-500 text-sm">Panel de gestión — Auxilio Mecánico</p>
                     </div>
 
                     @if (sessionExpired) {
                         <p-message severity="warn" styleClass="w-full mb-4">
                             <span class="flex items-center gap-2">
                                 <i class="pi pi-clock"></i>
-                                Tu sesión ha expirado. Por favor, inicia sesión nuevamente.
+                                Tu sesión ha expirado. Inicia sesión nuevamente.
                             </span>
+                        </p-message>
+                    }
+
+                    @if (loginError) {
+                        <p-message severity="error" styleClass="w-full mb-4">
+                            {{ loginError }}
                         </p-message>
                     }
 
@@ -133,7 +122,6 @@ import { StyleClassModule } from 'primeng/styleclass';
                         <p-button label="Ingresar" icon="pi pi-sign-in" styleClass="w-full mt-1"
                                   [loading]="loading" (onClick)="onLogin()" />
                     </div>
-
                 </div>
             </div>
         </div>
@@ -150,9 +138,13 @@ export class Login implements OnInit {
     password = '';
     loading = false;
     sessionExpired = false;
+    loginError: string | null = null;
 
     ngOnInit(): void {
         this.sessionExpired = this.route.snapshot.queryParamMap.get('sessionExpired') === '1';
+        if (this.authService.isAuthenticated()) {
+            this.router.navigate(['/dashboard']);
+        }
     }
 
     toggleDarkMode(): void {
@@ -166,41 +158,19 @@ export class Login implements OnInit {
         }
 
         this.loading = true;
+        this.loginError = null;
+
         this.authService.login(this.email, this.password).subscribe({
-            next: (res) => {
-                if (res.codigo === 200) {
-                    this.authService.getMe().subscribe({
-                        next: (meRes) => {
-                            this.loading = false;
-                            const empresas = meRes.data?.empresas ?? [];
-                            this.messageService.add({ severity: 'success', summary: '¡Bienvenido!', detail: 'Inicio de sesión exitoso', life: 2000 });
-                            setTimeout(() => {
-                                const rol = meRes.data?.rolCodigo;
-                                if (rol === 'SUPERADMIN') {
-                                    this.router.navigate(['/admin']);
-                                } else if (empresas.length === 0) {
-                                    this.router.navigate(['/auth/sin-empresa']);
-                                } else {
-                                    this.router.navigate(['/']);
-                                }
-                            }, 2000);
-                        },
-                        error: () => {
-                            this.loading = false;
-                            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo obtener información del usuario', life: 3000 });
-                        }
-                    });
-                } else {
-                    this.loading = false;
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: res.mensaje || 'Credenciales inválidas', life: 3000 });
-                }
-            },
-            error: (err) => {
+            next: () => {
                 this.loading = false;
-                const msg = err.error?.mensaje || 'Credenciales inválidas';
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: msg, life: 3000 });
+                this.messageService.add({ severity: 'success', summary: '¡Bienvenido!', detail: 'Inicio de sesión exitoso', life: 2000, icon: 'pi pi-check' });
+                setTimeout(() => this.router.navigate(['/dashboard']), 1000);
+            },
+            error: () => {
+                this.loading = false;
+                this.loginError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Credenciales inválidas', life: 4000 });
             }
         });
     }
 }
-

@@ -23,6 +23,9 @@ export interface ServiceAssignment {
     final_cost?: number;
     performed_service_description?: string;
     final_notes?: string;
+    quotation_status?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
+    quotation_description?: string;
+    estimated_completion_minutes?: number;
     assigned_at?: string;
     created_at?: string;
     updated_at?: string;

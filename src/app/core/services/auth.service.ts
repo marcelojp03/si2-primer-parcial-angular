@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, UserAuth } from '../models/auth.model';
 
@@ -17,6 +18,7 @@ export class AuthService {
 
     private readonly TOKEN_KEY = environment.auth.tokenKey;   // 'access_token'
     private readonly USER_KEY  = environment.auth.userKey;    // 'auth_user'
+    private readonly TENANT_KEY = 'auth_tenant_id';
 
     private currentUserSubject = new BehaviorSubject<UserAuth | null>(this.getUserFromStorage());
     public currentUser$ = this.currentUserSubject.asObservable();
@@ -32,6 +34,10 @@ export class AuthService {
         return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, body).pipe(
             tap(response => {
                 sessionStorage.setItem(this.TOKEN_KEY, response.access_token);
+                const claims = this.decodeToken();
+                if (claims?.tenant_id != null) {
+                    sessionStorage.setItem(this.TENANT_KEY, String(claims.tenant_id));
+                }
             }),
             switchMap(() => this.getMe()),
             catchError(error => {
@@ -71,6 +77,7 @@ export class AuthService {
     logout(): void {
         sessionStorage.removeItem(this.TOKEN_KEY);
         sessionStorage.removeItem(this.USER_KEY);
+        sessionStorage.removeItem(this.TENANT_KEY);
         this.currentUserSubject.next(null);
         this.router.navigate(['/login']);
     }
@@ -85,6 +92,26 @@ export class AuthService {
         return this.currentUserSubject.getValue();
     }
 
+    getTenantId(): number | null {
+        const stored = sessionStorage.getItem(this.TENANT_KEY);
+        if (stored !== null) {
+            const parsed = Number(stored);
+            return Number.isNaN(parsed) ? null : parsed;
+        }
+        const claims = this.decodeToken();
+        return claims?.tenant_id ?? null;
+    }
+
+    decodeToken(): { tenant_id?: number; sub?: number; role?: string; is_platform_admin?: boolean } | null {
+        const token = this.getAccessToken();
+        if (!token) return null;
+        try {
+            return jwtDecode(token);
+        } catch {
+            return null;
+        }
+    }
+
     isAuthenticated(): boolean {
         return !!this.getAccessToken();
     }
@@ -92,6 +119,7 @@ export class AuthService {
     clearSession(): void {
         sessionStorage.removeItem(this.TOKEN_KEY);
         sessionStorage.removeItem(this.USER_KEY);
+        sessionStorage.removeItem(this.TENANT_KEY);
         this.currentUserSubject.next(null);
     }
 

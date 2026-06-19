@@ -1,14 +1,16 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, ElementRef, ViewChild, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
+import * as L from 'leaflet';
 import { MetricsService } from '@/core/services/metrics.service';
-import { KPIDashboard } from '@/core/models/metrics.model';
+import { KPIDashboard, ZoneIncidentCount, WorkshopEfficiency } from '@/core/models/metrics.model';
 
 @Component({
   selector: 'app-kpi-dashboard',
   standalone: true,
-  imports: [CommonModule, SkeletonModule, TagModule],
+  imports: [CommonModule, TableModule, SkeletonModule, TagModule],
   template: `
     <div class="mt-6">
       <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-0 mb-4">
@@ -80,14 +82,73 @@ import { KPIDashboard } from '@/core/models/metrics.model';
       } @else {
         <p class="text-surface-400 text-sm">No se pudieron cargar los KPIs</p>
       }
+
+      <!-- Zonas con más incidentes (siempre en DOM para Leaflet) -->
+      <div class="mt-6" [class.hidden]="zones.length === 0">
+        <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-3">
+          <i class="pi pi-map-marker mr-1"></i>Zonas con más incidentes
+        </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <p-table [value]="zones" [paginator]="false" styleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr><th>Zona</th><th>Incidentes</th></tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-zone>
+                <tr>
+                  <td class="text-sm">{{ zone.label }}</td>
+                  <td><p-tag [value]="('' + zone.count)" severity="warn" /></td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+          <div #zonesMapContainer class="w-full rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden"
+               [style.height]="'250px'"></div>
+        </div>
+      </div>
+
+      <!-- Talleres más eficientes -->
+      @if (efficiency.length > 0) {
+        <div class="mt-6">
+          <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-3">
+            <i class="pi pi-star mr-1"></i>Talleres más eficientes
+          </h3>
+          <p-table [value]="efficiency" [paginator]="false" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>#</th><th>Taller</th><th>Score</th>
+                <th>Respuesta (min)</th><th>Completados</th><th>Reputación</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-ws let-i="rowIndex">
+              <tr>
+                <td class="text-sm text-surface-400">{{ i + 1 }}</td>
+                <td class="font-medium">{{ ws.name }}</td>
+                <td><p-tag [value]="('' + ws.score)" severity="success" /></td>
+                <td class="text-sm">{{ ws.avg_response_minutes != null ? ws.avg_response_minutes.toString() : '—' }}</td>
+                <td class="text-sm">{{ ws.completion_rate != null ? ws.completion_rate + '%' : '—' }}</td>
+                <td class="text-sm">{{ ws.reputation_score | number:'1.1-1' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
     </div>
   `
 })
-export class KpiDashboardComponent implements OnInit {
+export class KpiDashboardComponent implements OnInit, AfterViewInit {
+  @ViewChild('zonesMapContainer') zonesMapContainer!: ElementRef<HTMLDivElement>;
+
   private metricsService = inject(MetricsService);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
 
   kpis: KPIDashboard | null = null;
+  zones: ZoneIncidentCount[] = [];
+  efficiency: WorkshopEfficiency[] = [];
   loading = true;
+  mapReady = false;
+  private zonesMap: L.Map | null = null;
 
   ngOnInit(): void {
     this.metricsService.getKpis().subscribe({
@@ -95,9 +156,43 @@ export class KpiDashboardComponent implements OnInit {
         this.kpis = data;
         this.loading = false;
       },
-      error: () => {
-        this.loading = false;
-      }
+      error: () => { this.loading = false; }
     });
+    this.metricsService.getZones().subscribe({ next: d => { this.zones = d; this.cdr.detectChanges(); setTimeout(() => this.initZonesMap(), 300); } });
+    this.metricsService.getWorkshopEfficiency().subscribe({ next: d => this.efficiency = d });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => { if (this.zones.length > 0) this.initZonesMap(); }, 500);
+  }
+
+  private initZonesMap(): void {
+    if (this.zonesMap || !this.zonesMapContainer || this.zones.length === 0) return;
+    this.ngZone.runOutsideAngular(() => {
+      this.zonesMap = L.map(this.zonesMapContainer.nativeElement, {
+        center: [-17.7863, -63.1812],
+        zoom: 12,
+        zoomControl: true,
+      });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap', maxZoom: 19,
+      }).addTo(this.zonesMap);
+
+      const bounds: [number, number][] = [];
+      for (const z of this.zones) {
+        const latlng: [number, number] = [z.lat, z.lng];
+        bounds.push(latlng);
+        const size = Math.min(30, Math.max(10, z.count * 3));
+        L.circleMarker(latlng, {
+          radius: size, color: '#f97316', fillColor: '#fb923c',
+          fillOpacity: 0.6, weight: 2,
+        }).addTo(this.zonesMap!).bindPopup(`<b>${z.count} incidentes</b><br/>${z.label}`);
+      }
+      if (bounds.length > 0) {
+        this.zonesMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+      }
+      setTimeout(() => this.zonesMap?.invalidateSize(), 100);
+    });
+    this.mapReady = true;
   }
 }

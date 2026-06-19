@@ -31,7 +31,7 @@ import { ChartsDashboardComponent } from './charts-dashboard/charts-dashboard.co
                 </div>
             } @else if (metrics) {
                 <!-- Tarjetas de métricas -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
 
                     <div class="rounded-xl p-5 border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 flex flex-col gap-3">
                         <div class="flex items-center justify-between">
@@ -78,7 +78,7 @@ import { ChartsDashboardComponent } from './charts-dashboard/charts-dashboard.co
                 </div>
 
                 <!-- Segunda fila -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
 
                     <div class="rounded-xl p-5 border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 flex flex-col gap-3">
                         <div class="flex items-center justify-between">

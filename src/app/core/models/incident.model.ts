@@ -13,6 +13,7 @@ export interface Incident {
     longitude?: number;
     priority_level?: PriorityLevel | null;
     requires_tow: boolean;
+    service_modality?: 'A_DOMICILIO' | 'CLIENTE_VE_TALLER';
     requested_at: string;
     accepted_at?: string | null;
     started_at?: string | null;

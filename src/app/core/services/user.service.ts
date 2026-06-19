@@ -9,7 +9,16 @@ import { UserAuth } from '@/core/models/auth.model';
 export class UserService {
     private http = inject(HttpClient);
     private messageService = inject(MessageService);
-    private base = environment.baseUrl;
+    private base = environment.api.baseUrl;
+
+    createUser(data: { full_name: string; email: string; password: string; role: string; phone?: string; ci?: string }): Observable<UserAuth> {
+        return this.http.post<UserAuth>(`${this.base}/auth/register`, data).pipe(
+            catchError(err => {
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.detail || 'No se pudo crear el usuario.' });
+                return throwError(() => err);
+            })
+        );
+    }
 
     getAll(): Observable<UserAuth[]> {
         return this.http.get<UserAuth[]>(`${this.base}/users`).pipe(

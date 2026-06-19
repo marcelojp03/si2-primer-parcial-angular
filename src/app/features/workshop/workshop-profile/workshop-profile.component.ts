@@ -6,6 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
@@ -17,7 +18,7 @@ import { Workshop, WorkshopSchedule, Specialty } from '@/core/models/workshop.mo
 @Component({
     selector: 'app-workshop-profile',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, CheckboxModule, MultiSelectModule, TableModule, DialogModule, ToastModule, TabsModule],
+    imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TextareaModule, CheckboxModule, MultiSelectModule, SelectButtonModule, TableModule, DialogModule, ToastModule, TabsModule],
     providers: [MessageService],
     template: `
         <p-toast position="top-right" />
@@ -71,6 +72,10 @@ import { Workshop, WorkshopSchedule, Specialty } from '@/core/models/workshop.mo
                                         <p-checkbox [(ngModel)]="editForm.is_24_hours" [binary]="true" />
                                         <span class="text-sm">Atención 24 horas</span>
                                     </label>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-medium">Disponibilidad:</span>
+                                    <p-selectButton [options]="statusOptions" [(ngModel)]="editForm.status" optionLabel="label" optionValue="value" />
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="flex flex-col gap-2">
@@ -164,6 +169,10 @@ export class WorkshopProfileComponent implements OnInit {
     selectedToAdd: Specialty[] = [];
     specialtiesDialogVisible = false;
     saving = false;
+    statusOptions = [
+        { label: 'Disponible', value: 'ACTIVO' },
+        { label: 'No disponible', value: 'INACTIVO' },
+    ];
 
     ngOnInit(): void {
         this.workshopService.getMyWorkshops().subscribe({

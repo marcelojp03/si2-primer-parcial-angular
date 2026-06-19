@@ -56,6 +56,41 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contr
                         }
                     </div>
 
+                    <!-- Cotización -->
+                    @if (assignment.quotation_status) {
+                        <div class="mb-4 p-3 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">Cotización</span>
+                                <p-tag [value]="quotationStatusLabel" [severity]="quotationStatusSeverity" />
+                            </div>
+                            @if (assignment.quotation_description) {
+                                <p class="text-sm text-surface-600 dark:text-surface-400">{{ assignment.quotation_description }}</p>
+                            }
+                            @if (assignment.estimated_completion_minutes) {
+                                <p class="text-xs text-surface-500 mt-1">Tiempo estimado: {{ assignment.estimated_completion_minutes }} min</p>
+                            }
+                        </div>
+                    }
+
+                    <!-- Estado de pago -->
+                    @if (showPaymentInfo) {
+                        <div class="mb-4 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-credit-card text-green-600"></i>
+                                <span class="text-sm font-medium text-green-700 dark:text-green-300">
+                                    @if (assignment.assignment_status === 'PAGADO') {
+                                        Pago confirmado
+                                    } @else {
+                                        Pendiente de pago
+                                    }
+                                </span>
+                            </div>
+                            @if (assignment.final_cost) {
+                                <p class="text-sm text-green-600 dark:text-green-400 mt-1">Monto: Bs. {{ assignment.final_cost | number:'1.2-2' }}</p>
+                            }
+                        </div>
+                    }
+
                     <!-- Cambiar estado / asignar técnico -->
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="flex flex-col gap-2 flex-1">
@@ -97,6 +132,24 @@ export class AssignmentDetailComponent implements OnInit {
     selectedTechnicianId: number | null = null;
     selectedStatus: AssignmentStatus | null = null;
 
+    get showPaymentInfo(): boolean {
+        return this.assignment?.assignment_status === 'PENDIENTE_PAGO' || this.assignment?.assignment_status === 'PAGADO';
+    }
+
+    get quotationStatusLabel(): string {
+        const labels: Record<string, string> = {
+            'PENDIENTE': 'Pendiente', 'APROBADO': 'Aprobada', 'RECHAZADO': 'Rechazada',
+        };
+        return labels[this.assignment?.quotation_status ?? ''] ?? '—';
+    }
+
+    get quotationStatusSeverity(): TagSeverity {
+        const map: Record<string, TagSeverity> = {
+            'PENDIENTE': 'warn', 'APROBADO': 'success', 'RECHAZADO': 'danger',
+        };
+        return map[this.assignment?.quotation_status ?? ''] ?? 'secondary';
+    }
+
     statusOptions = [
         { label: 'En camino', value: 'EN_CAMINO' as AssignmentStatus },
         { label: 'En proceso', value: 'EN_PROCESO' as AssignmentStatus },
@@ -110,6 +163,7 @@ export class AssignmentDetailComponent implements OnInit {
         const id = Number(this.route.snapshot.paramMap.get('id'));
         this.assignmentService.getByIncidentId(id).subscribe({
             next: a => {
+                if (!a) { this.loading = false; return; }
                 this.assignment = a;
                 this.selectedStatus = a.assignment_status;
                 this.selectedTechnicianId = a.technician_id ?? null;

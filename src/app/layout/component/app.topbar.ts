@@ -11,6 +11,7 @@ import { NotificationsPanelComponent } from './notifications-panel.component';
 import { LayoutService } from '../service/layout.service';
 import { AuthService } from '@/core/services/auth.service';
 import { WsService } from '@/core/services/ws.service';
+import { ConnectivityService } from '@/core/services/connectivity.service';
 import { UserAuth } from '@/core/models/auth.model';
 import { Subscription } from 'rxjs';
 
@@ -27,8 +28,13 @@ import { Subscription } from 'rxjs';
                     <i class="pi pi-bars"></i>
                 </button>
                 <a class="layout-topbar-logo" routerLink="/">
-                    <img src="/logovpay.png" alt="VPay" class="h-8 object-contain dark:brightness-0 dark:invert" />
+                    <img src="/auxi.jpg" alt="Logo" class="h-8 object-contain dark:brightness-0 dark:invert" />
                 </a>
+                @if (!connectivity.isOnline) {
+                    <span class="ml-2 px-2 py-0.5 rounded text-xs font-medium bg-orange-500 text-white flex items-center gap-1">
+                        <i class="pi pi-wifi text-xs"></i> Sin conexión
+                    </span>
+                }
             </div>
 
             <div class="layout-topbar-actions">
@@ -79,6 +85,7 @@ export class AppTopbar implements OnInit, OnDestroy {
     userMenuItems: MenuItem[] = [];
 
     layoutService = inject(LayoutService);
+    connectivity = inject(ConnectivityService);
     private authService = inject(AuthService);
     private wsService = inject(WsService);
     private router = inject(Router);

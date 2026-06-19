@@ -1,6 +1,6 @@
 import {
     Component, OnInit, OnDestroy, AfterViewInit,
-    ElementRef, ViewChild, inject, NgZone
+    ChangeDetectorRef, ElementRef, ViewChild, inject, NgZone
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -12,7 +12,7 @@ import { Subscription } from 'rxjs';
 import { IncidentService } from '@/core/services/incident.service';
 import { WsService } from '@/core/services/ws.service';
 import { Incident } from '@/core/models/incident.model';
-import { WsMessage, LocationUpdatedPayload } from '@/core/models/ws.model';
+import { WsMessage, LocationUpdatedPayload, IncidentStatusChangedPayload } from '@/core/models/ws.model';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -79,13 +79,15 @@ function priorityLabel(p: string | null | undefined): string {
             </div>
 
             <!-- Mapa -->
-            @if (loading && !mapReady) {
-                <p-skeleton height="500px" borderRadius="12px" />
-            }
-            <div #mapContainer
-                 class="w-full rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
-                 [style.height]="'500px'"
-                 [class.hidden]="loading && !mapReady">
+            <div class="relative" [style.height]="'500px'">
+                @if (loading && !mapReady) {
+                    <p-skeleton height="500px" borderRadius="12px" />
+                }
+                <div #mapContainer
+                     class="w-full rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
+                     [style.height]="'500px'"
+                     [class.opacity-0]="!mapReady">
+                </div>
             </div>
         </div>
     `
@@ -96,6 +98,7 @@ export class IncidentMapComponent implements OnInit, AfterViewInit, OnDestroy {
     private incidentService = inject(IncidentService);
     private wsService = inject(WsService);
     private ngZone = inject(NgZone);
+    private cdr = inject(ChangeDetectorRef);
 
     incidents: Incident[] = [];
     loading = true;
@@ -103,7 +106,7 @@ export class IncidentMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
     private map!: L.Map;
     private markers = new Map<number, L.Marker>();
-    private wsSub?: Subscription;
+    private wsSubs: Subscription[] = [];
 
     readonly legend = [
         { label: 'Baja', color: '#22c55e' },
@@ -121,24 +124,28 @@ export class IncidentMapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit(): void {
-        this.ngZone.runOutsideAngular(() => {
-            this.map = L.map(this.mapContainer.nativeElement, {
-                center: [-17.7863, -63.1812], // Santa Cruz, Bolivia
-                zoom: 13,
+        setTimeout(() => {
+            this.ngZone.runOutsideAngular(() => {
+                this.map = L.map(this.mapContainer.nativeElement, {
+                    center: [-17.7863, -63.1812],
+                    zoom: 13,
+                });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19,
+                }).addTo(this.map);
             });
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom: 19,
-            }).addTo(this.map);
-
             this.mapReady = true;
+            setTimeout(() => this.map?.invalidateSize(), 100);
+            this.cdr.detectChanges();
             this.renderMarkers();
         });
     }
 
     ngOnDestroy(): void {
-        this.wsSub?.unsubscribe();
+        this.wsSubs.forEach(s => s.unsubscribe());
         if (this.map) {
             this.map.remove();
         }
@@ -204,25 +211,37 @@ export class IncidentMapComponent implements OnInit, AfterViewInit, OnDestroy {
     // ─── WebSocket live update ────────────────────────────────────────────────
 
     private subscribeWs(): void {
-        this.wsSub = this.wsService.locationUpdated$.subscribe((msg: WsMessage<LocationUpdatedPayload>) => {
-            const payload = msg.payload;
-            this.ngZone.run(() => {
-                const marker = this.markers.get(payload.incident_id);
-                if (marker) {
-                    const newLatLng: [number, number] = [payload.latitude, payload.longitude];
-                    marker.setLatLng(newLatLng);
+        this.wsSubs.push(
+            this.wsService.locationUpdated$.subscribe((msg: WsMessage<LocationUpdatedPayload>) => {
+                const payload = msg.payload;
+                this.ngZone.run(() => {
+                    const marker = this.markers.get(payload.incident_id);
+                    if (marker) {
+                        const newLatLng: [number, number] = [payload.latitude, payload.longitude];
+                        marker.setLatLng(newLatLng);
 
-                    // Actualizar modelo local también
-                    const incident = this.incidents.find(i => i.id === payload.incident_id);
-                    if (incident) {
-                        incident.latitude = payload.latitude;
-                        incident.longitude = payload.longitude;
+                        const incident = this.incidents.find(i => i.id === payload.incident_id);
+                        if (incident) {
+                            incident.latitude = payload.latitude;
+                            incident.longitude = payload.longitude;
+                        }
+                    } else {
+                        this.load();
                     }
-                } else {
-                    // Incidente nuevo con ubicación → recargar
-                    this.load();
-                }
-            });
-        });
+                });
+            })
+        );
+
+        this.wsSubs.push(
+            this.wsService.incidentStatus$.subscribe(() => {
+                this.ngZone.run(() => this.load());
+            })
+        );
+
+        this.wsSubs.push(
+            this.wsService.assignmentAccepted$.subscribe(() => {
+                this.ngZone.run(() => this.load());
+            })
+        );
     }
 }

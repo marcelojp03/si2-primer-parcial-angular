@@ -84,12 +84,21 @@ import autoTable from 'jspdf-autotable';
             @if (result.data.length > 0) {
               <p-button
                 icon="pi pi-file-pdf"
-                label="Descargar PDF"
+                label="PDF"
                 severity="danger"
                 outlined
                 size="small"
                 (onClick)="downloadPdf()"
-                class="ml-4 flex-shrink-0"
+                class="ml-2 flex-shrink-0"
+              />
+              <p-button
+                icon="pi pi-file-excel"
+                label="CSV"
+                severity="success"
+                outlined
+                size="small"
+                (onClick)="downloadCsv()"
+                class="ml-2 flex-shrink-0"
               />
             }
           </div>
@@ -199,5 +208,25 @@ export class NlReportComponent {
     });
 
     doc.save(`reporte-nl-${Date.now()}.pdf`);
+  }
+
+  downloadCsv(): void {
+    if (!this.result) return;
+    const cols = this.resultColumns;
+    const rows = this.result.data.map((row: any) =>
+      cols.map(c => {
+        const val = row[c];
+        const str = val != null ? String(val) : '';
+        return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+      }).join(',')
+    );
+    const csv = [cols.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte-nl-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }
